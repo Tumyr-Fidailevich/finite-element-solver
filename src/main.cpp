@@ -1,12 +1,12 @@
 #include <iostream>
-#include "io_parser.h"
-#include "lin-alg.h"
-#include "io_parser.h"
-#include "physics.h"
 #include "solver.h"
 
-int main()
+
+int main(int argc, char* argv[])
 {
-	std::cout << "Hello, World!" << std::endl;
+	Solver solver("../mesh.txt");
+	solver.solve();
+	solver.saveToFile("../result.txt");
+	std::cout << solver.getDisplacements() << std::endl;
 	return 0;
 }

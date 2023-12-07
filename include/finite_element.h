@@ -1,27 +1,43 @@
-#ifndef FINITE_ELEMENT_SOLVER_STRUCTS_H
-#define FINITE_ELEMENT_SOLVER_STRUCTS_H
+#ifndef FINITE_ELEMENT_SOLVER_FINITE_ELEMENT_H
+#define FINITE_ELEMENT_SOLVER_FINITE_ELEMENT_H
 
 #include "pch.h"
 
-struct Element
+struct Node
 {
-
-	void calculateStiffnessMatrix(const Eigen::Matrix3f& D, std::vector<Eigen::Triplet<float> >& triplets);
-
-	Eigen::Matrix<float, 3, 6> B;
-	int nodesIds[3];
+	double x = 0;
+	double y = 0;
+	enum ConstraintType
+	{
+		None = 0,
+		X = 1 << 0,
+		Y = 1 << 1,
+		Theta = 1 << 2
+	};
+	int constraint = None;
 };
 
-struct Constraint
+struct Material
 {
-	enum Type
-	{
-		UX = 1 << 0,
-		UY = 1 << 1,
-		UXY = UX | UY
-	};
-	int node;
-	Type type;
+	double youngModulus;
+	double inertiaMoment;
+	double area;
+};
+
+struct BeamElement
+{
+
+	Eigen::SparseMatrix<double>
+	calculateGlobalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials) const;
+
+	Eigen::SparseMatrix<double>
+	calculateRotateMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials) const;
+
+	Eigen::SparseMatrix<double>
+	calculateLocalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials) const;
+
+	std::pair<int, int> nodesIds;
+	int materialId;
 };
 
 

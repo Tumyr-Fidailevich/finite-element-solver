@@ -1,2 +1,6 @@
 #pragma once
 
+#ifndef FINITE_ELEMENT_SOLVER_PARSER_H
+#define FINITE_ELEMENT_SOLVER_PARSER_H
+
+#endif

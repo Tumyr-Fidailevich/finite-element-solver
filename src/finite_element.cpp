@@ -1,40 +1,76 @@
-#include "structs.h"
+#include "finite_element.h"
 
-void Element::calculateStiffnessMatrix(const Eigen::Matrix3f& D, std::vector<Eigen::Triplet<float>> &triplets)
+Eigen::SparseMatrix<double>
+BeamElement::calculateGlobalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials) const
 {
-	Eigen::Vector3f x, y;
-	x << nodesX[nodesIds[0]], nodesX[nodesIds[1]], nodesX[nodesIds[2]];
-	y << nodesY[nodesIds[0]], nodesY[nodesIds[1]], nodesY[nodesIds[2]];
+	auto rotateMatrix = calculateRotateMatrix(nodes, materials);
+	auto localStiffnessMatrix = calculateLocalStiffnessMatrix(nodes, materials);
+	return rotateMatrix.transpose() * localStiffnessMatrix * rotateMatrix;
+}
 
-	Eigen::Matrix3f C;
-	C << Eigen::Vector3f(1.0f, 1.0f, 1.0f), x, y;
+Eigen::SparseMatrix<double>
+BeamElement::calculateLocalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials) const
+{
+	Eigen::SparseMatrix<double> stiffnessMatrix(6, 6);
+	Node &left = nodes[nodesIds.first];
+	Node &right = nodes[nodesIds.second];
+	Material &material = materials[materialId];
+	double length = std::sqrt((right.x - left.x) * (right.x - left.x) + (right.y - left.y) * (right.y - left.y));
+	stiffnessMatrix.insert(0, 0) = material.youngModulus * material.area / length;
+	stiffnessMatrix.insert(0, 3) = -material.youngModulus * material.area / length;
+	stiffnessMatrix.insert(3, 3) = material.youngModulus * material.area / length;
+	stiffnessMatrix.insert(3, 0) = -material.youngModulus * material.area / length;
 
-	Eigen::Matrix3f IC = C.inverse();
+	stiffnessMatrix.insert(1, 1) = 12 * material.youngModulus * material.inertiaMoment / (length * length * length);
+	stiffnessMatrix.insert(1, 2) = 6 * material.youngModulus * material.inertiaMoment / (length * length);
+	stiffnessMatrix.insert(2, 1) = 6 * material.youngModulus * material.inertiaMoment / (length * length);
+	stiffnessMatrix.insert(2, 2) = 4 * material.youngModulus * material.inertiaMoment / length;
 
-	for (int i = 0; i < 3; i++)
+	stiffnessMatrix.insert(1, 4) = -12 * material.youngModulus * material.inertiaMoment / (length * length * length);
+	stiffnessMatrix.insert(1, 5) = 6 * material.youngModulus * material.inertiaMoment / (length * length);
+	stiffnessMatrix.insert(2, 4) = -6 * material.youngModulus * material.inertiaMoment / (length * length);
+	stiffnessMatrix.insert(2, 5) = 2 * material.youngModulus * material.inertiaMoment / length;
+
+	stiffnessMatrix.insert(4, 1) = -12 * material.youngModulus * material.inertiaMoment / (length * length * length);
+	stiffnessMatrix.insert(4, 2) = -6 * material.youngModulus * material.inertiaMoment / (length * length);
+	stiffnessMatrix.insert(5, 1) = 6 * material.youngModulus * material.inertiaMoment / (length * length);
+	stiffnessMatrix.insert(5, 2) = 2 * material.youngModulus * material.inertiaMoment / length;
+
+	stiffnessMatrix.insert(4, 4) = 12 * material.youngModulus * material.inertiaMoment / (length * length * length);
+	stiffnessMatrix.insert(4, 5) = -6 * material.youngModulus * material.inertiaMoment / (length * length);
+	stiffnessMatrix.insert(5, 4) = -6 * material.youngModulus * material.inertiaMoment / (length * length);
+	stiffnessMatrix.insert(5, 5) = 4 * material.youngModulus * material.inertiaMoment / length;
+
+	return stiffnessMatrix;
+}
+
+Eigen::SparseMatrix<double>
+BeamElement::calculateRotateMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials) const
+{
+	Eigen::SparseMatrix<double> rotateMatrix(6, 6);
+	Node &left = nodes[nodesIds.first];
+	Node &right = nodes[nodesIds.second];
+	double cos = (right.x - left.x) /
+				 (std::sqrt((right.x - left.x) * (right.x - left.x) + (right.y - left.y) * (right.y - left.y)));
+	double sin = (right.y - left.y) /
+				 (std::sqrt((right.x - left.x) * (right.x - left.x) + (right.y - left.y) * (right.y - left.y)));
+	for (int i = 0; i < 3; ++i)
 	{
-		B(0, 2 * i + 0) = IC(1, i);
-		B(0, 2 * i + 1) = 0.0f;
-		B(1, 2 * i + 0) = 0.0f;
-		B(1, 2 * i + 1) = IC(2, i);
-		B(2, 2 * i + 0) = IC(2, i);
-		B(2, 2 * i + 1) = IC(1, i);
-	}
-	Eigen::Matrix<float, 6, 6> K = B.transpose() * D * B * std::abs(C.determinant()) / 2.0f;
+		rotateMatrix.insert(i, 0) = cos;
+		rotateMatrix.insert(i, 1) = sin;
+		rotateMatrix.insert(i + 3, 0) = -sin;
+		rotateMatrix.insert(i + 3, 1) = cos;
 
-	for (int i = 0; i < 3; i++)
-	{
-		for (int j = 0; j < 3; j++)
+		rotateMatrix.insert(i, 2) = 0.0;
+		rotateMatrix.insert(i + 3, 2) = 0.0;
+
+		for (int j = 3; j < 6; ++j)
 		{
-			Eigen::Triplet<float> trplt11(2 * nodesIds[i] + 0, 2 * nodesIds[j] + 0, K(2 * i + 0, 2 * j + 0));
-			Eigen::Triplet<float> trplt12(2 * nodesIds[i] + 0, 2 * nodesIds[j] + 1, K(2 * i + 0, 2 * j + 1));
-			Eigen::Triplet<float> trplt21(2 * nodesIds[i] + 1, 2 * nodesIds[j] + 0, K(2 * i + 1, 2 * j + 0));
-			Eigen::Triplet<float> trplt22(2 * nodesIds[i] + 1, 2 * nodesIds[j] + 1, K(2 * i + 1, 2 * j + 1));
-
-			triplets.push_back(trplt11);
-			triplets.push_back(trplt12);
-			triplets.push_back(trplt21);
-			triplets.push_back(trplt22);
+			rotateMatrix.insert(i, j) = 0.0;
+			rotateMatrix.insert(i + 3, j) = 0.0;
 		}
 	}
+	return rotateMatrix;
 }
+
+
