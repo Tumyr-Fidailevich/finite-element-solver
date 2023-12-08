@@ -54,22 +54,17 @@ BeamElement::calculateRotateMatrix(std::vector<Node> &nodes, std::unordered_map<
 				 (std::sqrt((right.x - left.x) * (right.x - left.x) + (right.y - left.y) * (right.y - left.y)));
 	double sin = (right.y - left.y) /
 				 (std::sqrt((right.x - left.x) * (right.x - left.x) + (right.y - left.y) * (right.y - left.y)));
-	for (int i = 0; i < 3; ++i)
-	{
-		rotateMatrix.insert(i, 0) = cos;
-		rotateMatrix.insert(i, 1) = sin;
-		rotateMatrix.insert(i + 3, 0) = -sin;
-		rotateMatrix.insert(i + 3, 1) = cos;
+	rotateMatrix.insert(0, 0) = cos;
+	rotateMatrix.insert(1, 1) = cos;
+	rotateMatrix.insert(0, 1) = sin;
+	rotateMatrix.insert(1, 0) = -sin;
+	rotateMatrix.insert(2, 2) = 1;
 
-		rotateMatrix.insert(i, 2) = 0.0;
-		rotateMatrix.insert(i + 3, 2) = 0.0;
-
-		for (int j = 3; j < 6; ++j)
-		{
-			rotateMatrix.insert(i, j) = 0.0;
-			rotateMatrix.insert(i + 3, j) = 0.0;
-		}
-	}
+	rotateMatrix.insert(3, 3) = cos;
+	rotateMatrix.insert(4, 4) = cos;
+	rotateMatrix.insert(3, 4) = sin;
+	rotateMatrix.insert(4, 3) = -sin;
+	rotateMatrix.insert(5, 5) = 1;
 	return rotateMatrix;
 }
 
