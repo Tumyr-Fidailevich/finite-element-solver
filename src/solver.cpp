@@ -10,24 +10,36 @@ Solver::~Solver() = default;
 
 void Solver::setBoundaryConditions()
 {
-
-}
-
-void Solver::setLoads()
-{
-
+	for(int i = 0; i < nodes.size(); ++i)
+	{
+		if(nodes[i].constraint & Node::ConstraintType::X)
+		{
+			for(int j = 0; j < stiffnessMatrix.cols(); ++j) stiffnessMatrix.coeffRef(3 * i, j) = 0;
+			for(int j = 0; j < stiffnessMatrix.rows(); ++j) stiffnessMatrix.coeffRef(j, 3 * i) = 0;
+		}
+		if(nodes[i].constraint & Node::ConstraintType::Y)
+		{
+			for(int j = 0; j < stiffnessMatrix.cols(); ++j) stiffnessMatrix.coeffRef(3 * i + 1, j) = 0;
+			for(int j = 0; j < stiffnessMatrix.rows(); ++j) stiffnessMatrix.coeffRef(j, 3 * i + 1) = 0;
+		}
+		if(nodes[i].constraint & Node::ConstraintType::Theta)
+		{
+			for(int j = 0; j < stiffnessMatrix.cols(); ++j) stiffnessMatrix.coeffRef(3 * i + 2, j) = 0;
+			for(int j = 0; j < stiffnessMatrix.rows(); ++j) stiffnessMatrix.coeffRef(j, 3 * i + 2) = 0;
+		}
+	}
 }
 
 void Solver::calculateGlobalStiffnessMatrix()
 {
-	int offset = 0;
+	auto offset = 0;
 	for (auto &element: elements)
 	{
-		auto elementStiffnessMatrix = element.calculateGlobalStiffnessMatrix(nodes, materials);
-		int size = elementStiffnessMatrix.outerSize();
+		element.calculateGlobalStiffnessMatrix(nodes, materials);
+		auto size = element.globalStiffnessMatrix.outerSize();
 		for (int k = 0; k < size; ++k)
 		{
-			for (Eigen::SparseMatrix<double>::InnerIterator it(elementStiffnessMatrix, k); it; ++it)
+			for (Eigen::SparseMatrix<double>::InnerIterator it(element.globalStiffnessMatrix, k); it; ++it)
 			{
 				stiffnessMatrix.insert(offset + it.row(), offset + it.col()) += it.value();
 			}
@@ -40,6 +52,7 @@ void Solver::solve()
 {
 	Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
 	calculateGlobalStiffnessMatrix();
+	setBoundaryConditions();
 	solver.compute(stiffnessMatrix);
 	displacements = solver.solve(loads);
 }

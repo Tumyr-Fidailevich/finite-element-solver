@@ -26,11 +26,9 @@ private:
 
 	void setBoundaryConditions();
 
-	void setLoads();
-
-	Eigen::Vector2d loads; //
-	std::vector<Node> nodes; //
-	std::vector<BeamElement> elements; //
+	Eigen::Vector2d loads;
+	std::vector<Node> nodes;
+	std::vector<BeamElement> elements;
 	Eigen::SparseMatrix<double> stiffnessMatrix;
 	std::unordered_map<int, Material> materials;
 	Eigen::Vector2d displacements;
