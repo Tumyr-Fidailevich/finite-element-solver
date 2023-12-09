@@ -18,7 +18,15 @@ public:
 
 	void solve();
 
-	[[nodiscard]] Eigen::Vector2d getDisplacements() const;
+	void showDisplacements() const;
+
+	void showLocalStiffnessMatrix() const;
+
+	void showRotateMatrix() const;
+
+	void showGlobalStiffnessMatrix() const;
+
+	void resultsReport() const;
 
 private:
 
@@ -29,6 +37,7 @@ private:
 	Eigen::Vector2d loads;
 	std::vector<Node> nodes;
 	std::vector<BeamElement> elements;
+	Eigen::SparseMatrix<double> stiffnessMatrixBeforeBoundaryConditions;
 	Eigen::SparseMatrix<double> stiffnessMatrix;
 	std::unordered_map<int, Material> materials;
 	Eigen::Vector2d displacements;

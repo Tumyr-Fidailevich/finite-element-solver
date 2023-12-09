@@ -46,6 +46,7 @@ void Solver::calculateGlobalStiffnessMatrix()
 		}
 		offset += size / 2;
 	}
+	stiffnessMatrixBeforeBoundaryConditions = stiffnessMatrix;
 }
 
 void Solver::solve()
@@ -119,10 +120,60 @@ void Solver::initializeFromFile(const std::string &path)
 
 void Solver::saveToFile(const std::string &path)
 {
-
+	std::ofstream file(path);
+	if(file.is_open())
+	{
+		for(auto &disp : displacements)
+		{
+			file << disp << std::endl;
+		}
+	}else
+	{
+		std::cerr << "Error during opening destination file" << std::endl;
+	}
 }
 
-Eigen::Vector2d Solver::getDisplacements() const
+void Solver::showDisplacements() const
 {
-	return displacements;
+	std::cout << "Displacements: ";
+	std::cout << displacements << std::endl;
+}
+
+void Solver::showLocalStiffnessMatrix() const
+{
+	for(int i = 0; i < elements.size(); ++i)
+	{
+		std::cout << i << " elements local stiffness matrix:" << std::endl;
+		std::cout << elements[i].localStiffnessMatrix << std::endl;
+	}
+}
+
+void Solver::showRotateMatrix() const
+{
+	for(int i = 0; i < elements.size(); ++i)
+	{
+		std::cout << i << " elements rotate matrix:" << std::endl;
+		std::cout << elements[i].rotateMatrix << std::endl;
+	}
+}
+
+void Solver::showGlobalStiffnessMatrix() const
+{
+	for(int i = 0; i < elements.size(); ++i)
+	{
+		std::cout << i << " elements global stiffness matrix:" << std::endl;
+		std::cout << elements[i].globalStiffnessMatrix << std::endl;
+	}
+}
+
+void Solver::resultsReport() const
+{
+	showDisplacements();
+	showLocalStiffnessMatrix();
+	showRotateMatrix();
+	showGlobalStiffnessMatrix();
+	std::cout << "Full system matrix before applying boundary conditions: ";
+	std::cout << stiffnessMatrixBeforeBoundaryConditions;
+	std::cout << "System stiffness matrix: " << std::endl;
+	std::cout << stiffnessMatrix;
 }

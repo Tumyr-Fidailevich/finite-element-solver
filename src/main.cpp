@@ -4,9 +4,9 @@
 
 int main(int argc, char* argv[])
 {
-	Solver solver("../mesh.txt");
+	Solver solver("../meshes/mesh.txt");
 	solver.solve();
-	solver.saveToFile("../result.txt");
-	std::cout << solver.getDisplacements() << std::endl;
+	solver.saveToFile("../results/result.txt");
+	solver.resultsReport();
 	return 0;
 }
