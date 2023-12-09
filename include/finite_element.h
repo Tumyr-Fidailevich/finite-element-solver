@@ -27,17 +27,17 @@ struct Material
 struct BeamElement
 {
 
-	Eigen::SparseMatrix<double>
-	calculateGlobalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials) const;
+	void calculateGlobalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials);
 
-	Eigen::SparseMatrix<double>
-	calculateRotateMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials) const;
+	void calculateRotateMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials);
 
-	Eigen::SparseMatrix<double>
-	calculateLocalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials) const;
+	void calculateLocalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials);
 
 	std::pair<int, int> nodesIds;
 	int materialId;
+	Eigen::SparseMatrix<double> localStiffnessMatrix{6, 6};
+	Eigen::SparseMatrix<double> rotateMatrix{6, 6};
+	Eigen::SparseMatrix<double> globalStiffnessMatrix{6, 6};
 };
 
 
