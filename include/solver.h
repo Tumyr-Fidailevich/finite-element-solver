@@ -12,7 +12,7 @@ public:
 
 	~Solver();
 
-	void saveToFile(const std::string &path);
+	void saveToFile(const std::string &path) const;
 
 	void calculateGlobalStiffnessMatrix();
 
@@ -26,21 +26,27 @@ public:
 
 	void showGlobalStiffnessMatrix() const;
 
+	void showQuasiDiagonalStiffnessMatrix() const;
+
+	void showCorrespondenceMatrix() const;
+
 	void resultsReport() const;
 
 private:
 
 	void initializeFromFile(const std::string &path);
 
-	void setBoundaryConditions();
+	void setConstraint();
 
-	Eigen::Vector2d loads;
+	Eigen::VectorXd loads;
 	std::vector<Node> nodes;
 	std::vector<BeamElement> elements;
 	Eigen::SparseMatrix<double> stiffnessMatrixBeforeBoundaryConditions;
+	Eigen::SparseMatrix<double> quasiDiagonalStiffnessMatrix;
+	Eigen::SparseMatrix<double> correspondenceMatrix;
 	Eigen::SparseMatrix<double> stiffnessMatrix;
 	std::unordered_map<int, Material> materials;
-	Eigen::Vector2d displacements;
+	Eigen::VectorXd displacements;
 };
 
 #endif

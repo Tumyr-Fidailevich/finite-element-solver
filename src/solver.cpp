@@ -3,49 +3,76 @@
 Solver::Solver(const std::string &path)
 {
 	initializeFromFile(path);
-	stiffnessMatrix.resize(3 * nodes.size(), 3 * nodes.size());
+	stiffnessMatrix.resize(BeamElement::DOF * nodes.size(), BeamElement::DOF * nodes.size());
+	quasiDiagonalStiffnessMatrix.resize(elements.size() * BeamElement::DOF * BeamElement::ORDER,
+										elements.size() * BeamElement::DOF * BeamElement::ORDER);
+	correspondenceMatrix.resize(elements.size() * BeamElement::DOF * BeamElement::ORDER,
+								nodes.size() * BeamElement::DOF);
 }
 
 Solver::~Solver() = default;
 
-void Solver::setBoundaryConditions()
+void Solver::setConstraint()
 {
-	for(int i = 0; i < nodes.size(); ++i)
+	for (int i = 0; i < nodes.size(); ++i)
 	{
-		if(nodes[i].constraint & Node::ConstraintType::X)
+		if (nodes[i].constraint & Node::ConstraintType::X)
 		{
-			for(int j = 0; j < stiffnessMatrix.cols(); ++j) stiffnessMatrix.coeffRef(3 * i, j) = 0;
-			for(int j = 0; j < stiffnessMatrix.rows(); ++j) stiffnessMatrix.coeffRef(j, 3 * i) = 0;
+			for (int j = 0; j < stiffnessMatrix.cols(); ++j)
+			{
+				stiffnessMatrix.coeffRef(3 * i, j) = 0;
+				stiffnessMatrix.coeffRef(j, 3 * i) = 0;
+			}
+			stiffnessMatrix.coeffRef(3 * i, 3 * i) = 1;
 		}
-		if(nodes[i].constraint & Node::ConstraintType::Y)
+		if (nodes[i].constraint & Node::ConstraintType::Y)
 		{
-			for(int j = 0; j < stiffnessMatrix.cols(); ++j) stiffnessMatrix.coeffRef(3 * i + 1, j) = 0;
-			for(int j = 0; j < stiffnessMatrix.rows(); ++j) stiffnessMatrix.coeffRef(j, 3 * i + 1) = 0;
+			for (int j = 0; j < stiffnessMatrix.cols(); ++j)
+			{
+				stiffnessMatrix.coeffRef(3 * i + 1, j) = 0;
+				stiffnessMatrix.coeffRef(j, 3 * i + 1) = 0;
+			}
+			stiffnessMatrix.coeffRef(3 * i + 1, 3 * i + 1) = 1;
 		}
-		if(nodes[i].constraint & Node::ConstraintType::Theta)
+		if (nodes[i].constraint & Node::ConstraintType::Theta)
 		{
-			for(int j = 0; j < stiffnessMatrix.cols(); ++j) stiffnessMatrix.coeffRef(3 * i + 2, j) = 0;
-			for(int j = 0; j < stiffnessMatrix.rows(); ++j) stiffnessMatrix.coeffRef(j, 3 * i + 2) = 0;
+			for (int j = 0; j < stiffnessMatrix.cols(); ++j)
+			{
+				stiffnessMatrix.coeffRef(3 * i + 2, j) = 0;
+				stiffnessMatrix.coeffRef(j, 3 * i + 2) = 0;
+			}
+			stiffnessMatrix.coeffRef(3 * i + 2, 3 * i + 2) = 1;
 		}
 	}
 }
 
 void Solver::calculateGlobalStiffnessMatrix()
 {
-	auto offset = 0;
+	auto offset = 0LL;
 	for (auto &element: elements)
 	{
 		element.calculateGlobalStiffnessMatrix(nodes, materials);
 		auto size = element.globalStiffnessMatrix.outerSize();
-		for (int k = 0; k < size; ++k)
+		for (int i = 0; i < size; i++)
 		{
-			for (Eigen::SparseMatrix<double>::InnerIterator it(element.globalStiffnessMatrix, k); it; ++it)
+			for (int j = 0; j < size; j++)
 			{
-				stiffnessMatrix.insert(offset + it.row(), offset + it.col()) += it.value();
+				quasiDiagonalStiffnessMatrix.coeffRef(offset + i, offset + j) =
+						element.globalStiffnessMatrix.coeff(i, j);
 			}
 		}
-		offset += size / 2;
+
+		correspondenceMatrix.coeffRef(offset, 3 * element.nodesIds.first) = 1;
+		correspondenceMatrix.coeffRef(offset + 1, 3 * element.nodesIds.first + 1) = 1;
+		correspondenceMatrix.coeffRef(offset + 2, 3 * element.nodesIds.first + 2) = 1;
+
+		correspondenceMatrix.coeffRef(offset + 3, 3 * element.nodesIds.second) = 1;
+		correspondenceMatrix.coeffRef(offset + 4, 3 * element.nodesIds.second + 1) = 1;
+		correspondenceMatrix.coeffRef(offset + 5, 3 * element.nodesIds.second + 2) = 1;
+
+		offset += size;
 	}
+	stiffnessMatrix = correspondenceMatrix.transpose() * quasiDiagonalStiffnessMatrix * correspondenceMatrix;
 	stiffnessMatrixBeforeBoundaryConditions = stiffnessMatrix;
 }
 
@@ -53,7 +80,7 @@ void Solver::solve()
 {
 	Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
 	calculateGlobalStiffnessMatrix();
-	setBoundaryConditions();
+	setConstraint();
 	solver.compute(stiffnessMatrix);
 	displacements = solver.solve(loads);
 }
@@ -61,6 +88,11 @@ void Solver::solve()
 void Solver::initializeFromFile(const std::string &path)
 {
 	std::fstream file(path);
+	if (!file.is_open())
+	{
+		file.close();
+		throw std::exception("Cant open mesh file");
+	}
 
 	int materialsCount;
 	file >> materialsCount;
@@ -78,7 +110,7 @@ void Solver::initializeFromFile(const std::string &path)
 	{
 		Node node;
 		file >> node.x >> node.y;
-		nodes.emplace_back(node);
+		nodes.push_back(node);
 	}
 	nodes.shrink_to_fit();
 
@@ -98,72 +130,118 @@ void Solver::initializeFromFile(const std::string &path)
 	{
 		int cons;
 		file >> cons;
-		nodes[i].constraint |= cons == 1 ? Node::ConstraintType::X : 0;
+		nodes[i].constraint |= cons == 0 ? Node::ConstraintType::X : 0;
 		file >> cons;
-		nodes[i].constraint |= cons == 1 ? Node::ConstraintType::Y : 0;
+		nodes[i].constraint |= cons == 0 ? Node::ConstraintType::Y : 0;
 		file >> cons;
-		nodes[i].constraint |= cons == 1 ? Node::ConstraintType::Theta : 0;
+		nodes[i].constraint |= cons == 0 ? Node::ConstraintType::Theta : 0;
 	}
 
 	int loadsCount;
 	file >> loadsCount;
-	loads.resize(loadsCount);
+	loads.resize(3 * loadsCount);
 	for (int i = 0; i < loadsCount; i++)
 	{
 		double X, Y, M;
 		file >> X >> Y >> M;
-		loads[i + 0] = X;
-		loads[i + 1] = Y;
-		loads[i + 2] = M;
+		loads[3 * i + 0] = X;
+		loads[3 * i + 1] = Y;
+		loads[3 * i + 2] = M;
 	}
+	file.close();
 }
 
-void Solver::saveToFile(const std::string &path)
+void Solver::saveToFile(const std::string &path) const
 {
 	std::ofstream file(path);
-	if(file.is_open())
+	if (file.is_open())
 	{
-		for(auto &disp : displacements)
+		file << "X Displacements: " << std::endl;
+		for (int i = 0; i < displacements.size(); i += 3) file << displacements[i] << std::endl;
+		file << "Y Displacements: " << std::endl;
+		for (int i = 1; i < displacements.size(); i += 3) file << displacements[i] << std::endl;
+		file << "Angle Displacements: " << std::endl;
+		for (int i = 2; i < displacements.size(); i += 3) file << displacements[i] << std::endl;
+
+		for (int i = 0; i < elements.size(); ++i)
 		{
-			file << disp << std::endl;
+			file << i + 1 << " elements local stiffness matrix:" << std::endl;
+			file << 1e-6 * Eigen::MatrixXd(elements[i].localStiffnessMatrix) << std::endl;
 		}
-	}else
+
+		for (int i = 0; i < elements.size(); ++i)
+		{
+			file << i + 1 << " elements rotate matrix:" << std::endl;
+			file << Eigen::MatrixXd(elements[i].rotateMatrix) << std::endl;
+		}
+
+		for (int i = 0; i < elements.size(); ++i)
+		{
+			file << i + 1 << " elements global stiffness matrix:" << std::endl;
+			file << 1e-6 * Eigen::MatrixXd(elements[i].globalStiffnessMatrix) << std::endl;
+		}
+
+		file << "Correspondence matrix: " << std::endl;
+		file << Eigen::MatrixXd(correspondenceMatrix) << std::endl;
+
+		file << "Quasi diagonal stiffness matrix: " << std::endl;
+		file << 1e-6 * Eigen::MatrixXd(quasiDiagonalStiffnessMatrix) << std::endl;
+
+		file << "Full system matrix before applying boundary conditions: " << std::endl;
+		file << 1e-6 * Eigen::MatrixXd(stiffnessMatrixBeforeBoundaryConditions) << std::endl;
+
+		file << "System stiffness matrix: " << std::endl;
+		file << 1e-6 * Eigen::MatrixXd(stiffnessMatrix) << std::endl;
+	} else
 	{
 		std::cerr << "Error during opening destination file" << std::endl;
 	}
+	file.close();
 }
 
 void Solver::showDisplacements() const
 {
-	std::cout << "Displacements: ";
+	std::cout << "Displacements: " << std::endl;
 	std::cout << displacements << std::endl;
 }
 
 void Solver::showLocalStiffnessMatrix() const
 {
-	for(int i = 0; i < elements.size(); ++i)
+	for (int i = 0; i < elements.size(); ++i)
 	{
-		std::cout << i << " elements local stiffness matrix:" << std::endl;
-		std::cout << elements[i].localStiffnessMatrix << std::endl;
+		std::cout << i + 1 << " elements local stiffness matrix:" << std::endl;
+		std::cout << Eigen::MatrixXd(elements[i].localStiffnessMatrix) << std::endl;
 	}
 }
 
 void Solver::showRotateMatrix() const
 {
-	for(int i = 0; i < elements.size(); ++i)
+	for (int i = 0; i < elements.size(); ++i)
 	{
-		std::cout << i << " elements rotate matrix:" << std::endl;
-		std::cout << elements[i].rotateMatrix << std::endl;
+		std::cout << i + 1 << " elements rotate matrix:" << std::endl;
+		std::cout << Eigen::MatrixXd(elements[i].rotateMatrix) << std::endl;
 	}
 }
 
 void Solver::showGlobalStiffnessMatrix() const
 {
-	for(int i = 0; i < elements.size(); ++i)
+	for (int i = 0; i < elements.size(); ++i)
 	{
-		std::cout << i << " elements global stiffness matrix:" << std::endl;
-		std::cout << elements[i].globalStiffnessMatrix << std::endl;
+		std::cout << i + 1 << " elements global stiffness matrix:" << std::endl;
+		std::cout << Eigen::MatrixXd(elements[i].globalStiffnessMatrix) << std::endl;
 	}
+}
+
+void Solver::showQuasiDiagonalStiffnessMatrix() const
+{
+	std::cout << "Quasi diagonal stiffness matrix: " << std::endl;
+	std::cout << Eigen::MatrixXd(quasiDiagonalStiffnessMatrix) << std::endl;
+}
+
+void Solver::showCorrespondenceMatrix() const
+{
+	std::cout << "Correspondence matrix: ";
+	std::cout << Eigen::MatrixXd(correspondenceMatrix) << std::endl;
 }
 
 void Solver::resultsReport() const
@@ -172,8 +250,10 @@ void Solver::resultsReport() const
 	showLocalStiffnessMatrix();
 	showRotateMatrix();
 	showGlobalStiffnessMatrix();
-	std::cout << "Full system matrix before applying boundary conditions: ";
-	std::cout << stiffnessMatrixBeforeBoundaryConditions;
+	showQuasiDiagonalStiffnessMatrix();
+	showCorrespondenceMatrix();
+	std::cout << "Full system matrix before applying boundary conditions: " << std::endl;
+	std::cout << Eigen::MatrixXd(stiffnessMatrixBeforeBoundaryConditions) << std::endl;
 	std::cout << "System stiffness matrix: " << std::endl;
-	std::cout << stiffnessMatrix;
+	std::cout << Eigen::MatrixXd(stiffnessMatrix);
 }

@@ -35,9 +35,11 @@ struct BeamElement
 
 	std::pair<int, int> nodesIds;
 	int materialId;
-	Eigen::SparseMatrix<double> localStiffnessMatrix{6, 6};
-	Eigen::SparseMatrix<double> rotateMatrix{6, 6};
-	Eigen::SparseMatrix<double> globalStiffnessMatrix{6, 6};
+	static const short DOF = 3;
+	static const short ORDER = 2;
+	Eigen::SparseMatrix<double> localStiffnessMatrix{DOF * ORDER, DOF * ORDER};
+	Eigen::SparseMatrix<double> rotateMatrix{DOF * ORDER, DOF * ORDER};
+	Eigen::SparseMatrix<double> globalStiffnessMatrix{DOF * ORDER, DOF * ORDER};
 };
 
 

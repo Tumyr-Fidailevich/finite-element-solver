@@ -1,13 +1,13 @@
 #include "finite_element.h"
 
-void
-BeamElement::calculateGlobalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials)
+void BeamElement::calculateGlobalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials)
 {
+	calculateLocalStiffnessMatrix(nodes, materials);
+	calculateRotateMatrix(nodes, materials);
 	globalStiffnessMatrix = rotateMatrix.transpose() * localStiffnessMatrix * rotateMatrix;
 }
 
-void
-BeamElement::calculateLocalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials)
+void BeamElement::calculateLocalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials)
 {
 	Node &left = nodes[nodesIds.first];
 	Node &right = nodes[nodesIds.second];
@@ -44,8 +44,7 @@ BeamElement::calculateLocalStiffnessMatrix(std::vector<Node> &nodes, std::unorde
 
 }
 
-void
-BeamElement::calculateRotateMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials)
+void BeamElement::calculateRotateMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials)
 {
 	Node &left = nodes[nodesIds.first];
 	Node &right = nodes[nodesIds.second];
