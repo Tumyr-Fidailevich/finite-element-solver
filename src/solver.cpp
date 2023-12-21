@@ -2,6 +2,11 @@
 
 Solver::Solver(const std::string &path)
 {
+	/**
+	 * Инициализирует объект решателя по пути сетки
+	 *
+	 * @param path Путь к файлу с сеткой
+	 */
 	initializeFromFile(path);
 	stiffnessMatrix.resize(BeamElement::DOF * nodes.size(), BeamElement::DOF * nodes.size());
 	quasiDiagonalStiffnessMatrix.resize(elements.size() * BeamElement::DOF * BeamElement::ORDER,
@@ -14,6 +19,9 @@ Solver::~Solver() = default;
 
 void Solver::setConstraint()
 {
+	/**
+ 	* Устанавливает граничные условия
+ 	*/
 	for (int i = 0; i < nodes.size(); ++i)
 	{
 		if (nodes[i].constraint & Node::ConstraintType::X)
@@ -48,6 +56,9 @@ void Solver::setConstraint()
 
 void Solver::calculateGlobalStiffnessMatrix()
 {
+	/**
+ 	* Расчет матрицы жесткости системы
+ 	*/
 	auto offset = 0LL;
 	for (auto &element: elements)
 	{
@@ -78,6 +89,9 @@ void Solver::calculateGlobalStiffnessMatrix()
 
 void Solver::solve()
 {
+	/**
+ 	* Запускает решение задачи
+ 	*/
 	Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
 	calculateGlobalStiffnessMatrix();
 	setConstraint();
@@ -87,6 +101,11 @@ void Solver::solve()
 
 void Solver::initializeFromFile(const std::string &path)
 {
+	/**
+ 	* Инициализирует параметры решателя по исходному файлу
+ 	*
+ 	* @param path Путь к файлу с сеткой
+ 	*/
 	std::fstream file(path);
 	if (!file.is_open())
 	{
@@ -153,6 +172,11 @@ void Solver::initializeFromFile(const std::string &path)
 
 void Solver::saveToFile(const std::string &path) const
 {
+	/**
+ 	* Сохраняет результаты расчета в выбранный файл
+ 	*
+ 	* @param path Путь к файлу с результатами
+ 	*/
 	std::ofstream file(path);
 	if (file.is_open())
 	{
@@ -201,12 +225,18 @@ void Solver::saveToFile(const std::string &path) const
 
 void Solver::showDisplacements() const
 {
+	/**
+ 	* Отрисовывает перемещения
+ 	*/
 	std::cout << "Displacements: " << std::endl;
 	std::cout << displacements << std::endl;
 }
 
 void Solver::showLocalStiffnessMatrix() const
 {
+	/**
+ 	* Отрисовывает локальную матрицу жесткости каждого элемента
+ 	*/
 	for (int i = 0; i < elements.size(); ++i)
 	{
 		std::cout << i + 1 << " elements local stiffness matrix:" << std::endl;
@@ -216,6 +246,9 @@ void Solver::showLocalStiffnessMatrix() const
 
 void Solver::showRotateMatrix() const
 {
+	/**
+ 	* Отрисовывает матрицу перехода в глобальную систему координат
+ 	*/
 	for (int i = 0; i < elements.size(); ++i)
 	{
 		std::cout << i + 1 << " elements rotate matrix:" << std::endl;
@@ -225,6 +258,9 @@ void Solver::showRotateMatrix() const
 
 void Solver::showGlobalStiffnessMatrix() const
 {
+	/**
+ 	* Отрисовывает глобальную матрицу жесткости
+ 	*/
 	for (int i = 0; i < elements.size(); ++i)
 	{
 		std::cout << i + 1 << " elements global stiffness matrix:" << std::endl;
@@ -234,6 +270,9 @@ void Solver::showGlobalStiffnessMatrix() const
 
 void Solver::showQuasiDiagonalStiffnessMatrix() const
 {
+	/**
+ 	* Отрисовывает квазидиагональную матрицу жесткости системы
+ 	*/
 	std::cout << "Quasi diagonal stiffness matrix: " << std::endl;
 	std::cout << Eigen::MatrixXd(quasiDiagonalStiffnessMatrix) << std::endl;
 }
@@ -246,6 +285,9 @@ void Solver::showCorrespondenceMatrix() const
 
 void Solver::resultsReport() const
 {
+	/**
+ 	* Отрисоывает результаты в консоль
+ 	*/
 	showDisplacements();
 	showLocalStiffnessMatrix();
 	showRotateMatrix();

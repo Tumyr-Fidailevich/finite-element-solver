@@ -2,6 +2,12 @@
 
 void BeamElement::calculateGlobalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials)
 {
+	/**
+ 	* Расчет глобальной матрицы жесткости элемента
+	*
+	* @param nodes Массив узлов
+	* @param materials хэш таблица с материалами
+ 	*/
 	calculateLocalStiffnessMatrix(nodes, materials);
 	calculateRotateMatrix(nodes, materials);
 	globalStiffnessMatrix = rotateMatrix.transpose() * localStiffnessMatrix * rotateMatrix;
@@ -9,6 +15,12 @@ void BeamElement::calculateGlobalStiffnessMatrix(std::vector<Node> &nodes, std::
 
 void BeamElement::calculateLocalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials)
 {
+	/**
+ 	* Расчет локальной матрицы жесткости элемента
+	*
+	* @param nodes Массив узлов
+	* @param materials хэш таблица с материалами
+ 	*/
 	Node &left = nodes[nodesIds.first];
 	Node &right = nodes[nodesIds.second];
 	Material &material = materials[materialId];
@@ -46,6 +58,12 @@ void BeamElement::calculateLocalStiffnessMatrix(std::vector<Node> &nodes, std::u
 
 void BeamElement::calculateRotateMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials)
 {
+	/**
+ 	* Расчет матрицы перехода
+	*
+	* @param nodes Массив узлов
+	* @param materials хэш таблица с материалами
+ 	*/
 	Node &left = nodes[nodesIds.first];
 	Node &right = nodes[nodesIds.second];
 	double cos = (right.x - left.x) /
