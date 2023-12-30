@@ -216,6 +216,9 @@ void Solver::saveToFile(const std::string &path) const
 
 		file << "System stiffness matrix: " << std::endl;
 		file << 1e-6 * Eigen::MatrixXd(stiffnessMatrix) << std::endl;
+
+		file << "Nodal forces: " << std::endl;
+		file << stiffnessMatrixBeforeBoundaryConditions * displacements << std::endl;
 	} else
 	{
 		std::cerr << "Error during opening destination file" << std::endl;
@@ -279,8 +282,20 @@ void Solver::showQuasiDiagonalStiffnessMatrix() const
 
 void Solver::showCorrespondenceMatrix() const
 {
-	std::cout << "Correspondence matrix: ";
+	/**
+ 	* Отрисовывает матрицу соответствия
+ 	*/
+	std::cout << "Correspondence matrix: " << std::endl;
 	std::cout << Eigen::MatrixXd(correspondenceMatrix) << std::endl;
+}
+
+void Solver::showNodalForces() const
+{
+	/**
+ 	* Отрисовывает узловые нагрузки
+ 	*/
+	std::cout << "Nodal forces: " << std::endl;
+	std::cout << stiffnessMatrixBeforeBoundaryConditions * displacements << std::endl;
 }
 
 void Solver::resultsReport() const

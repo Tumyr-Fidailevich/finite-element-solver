@@ -30,6 +30,8 @@ public:
 
 	void showCorrespondenceMatrix() const;
 
+	void showNodalForces() const;
+
 	void resultsReport() const;
 
 private:
