@@ -1,5 +1,5 @@
-#ifndef FINITE_ELEMENT_SOLVER_FINITE_ELEMENT_H
-#define FINITE_ELEMENT_SOLVER_FINITE_ELEMENT_H
+#ifndef FINITE_ELEMENT_SOLVER_BEAM_ELEMENT_H
+#define FINITE_ELEMENT_SOLVER_BEAM_ELEMENT_H
 
 #include "pch.h"
 #include "material.h"
@@ -21,12 +21,6 @@ struct BeamElement
 	Eigen::SparseMatrix<double> localStiffnessMatrix{DOF * ORDER, DOF * ORDER};
 	Eigen::SparseMatrix<double> rotateMatrix{DOF * ORDER, DOF * ORDER};
 	Eigen::SparseMatrix<double> globalStiffnessMatrix{DOF * ORDER, DOF * ORDER};
-};
-
-
-struct PlanarElement
-{
-
 };
 
 #endif

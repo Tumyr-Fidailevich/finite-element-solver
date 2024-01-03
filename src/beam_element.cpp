@@ -1,4 +1,4 @@
-#include "finite_element.h"
+#include "beam_element.h"
 
 void BeamElement::calculateGlobalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials)
 {
