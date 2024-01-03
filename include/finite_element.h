@@ -2,31 +2,12 @@
 #define FINITE_ELEMENT_SOLVER_FINITE_ELEMENT_H
 
 #include "pch.h"
+#include "material.h"
+#include "node.h"
 
-struct Node
-{
-	double x = 0;
-	double y = 0;
-	enum ConstraintType
-	{
-		None = 0,
-		X = 1 << 0,
-		Y = 1 << 1,
-		Theta = 1 << 2
-	};
-	int constraint = None;
-};
-
-struct Material
-{
-	double youngModulus;
-	double inertiaMoment;
-	double area;
-};
 
 struct BeamElement
 {
-
 	void calculateGlobalStiffnessMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials);
 
 	void calculateRotateMatrix(std::vector<Node> &nodes, std::unordered_map<int, Material> &materials);
@@ -42,5 +23,10 @@ struct BeamElement
 	Eigen::SparseMatrix<double> globalStiffnessMatrix{DOF * ORDER, DOF * ORDER};
 };
 
+
+struct PlanarElement
+{
+
+};
 
 #endif
