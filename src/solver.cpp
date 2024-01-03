@@ -1,6 +1,6 @@
 #include "solver.h"
 
-Solver::Solver(const std::string &path)
+BeamSolver::BeamSolver(const std::string &path)
 {
 	/**
 	 * Инициализирует объект решателя по пути сетки
@@ -15,9 +15,9 @@ Solver::Solver(const std::string &path)
 								nodes.size() * BeamElement::DOF);
 }
 
-Solver::~Solver() = default;
+BeamSolver::~BeamSolver() = default;
 
-void Solver::setConstraint()
+void BeamSolver::setConstraint()
 {
 	/**
  	* Устанавливает граничные условия
@@ -54,7 +54,7 @@ void Solver::setConstraint()
 	}
 }
 
-void Solver::calculateGlobalStiffnessMatrix()
+void BeamSolver::calculateGlobalStiffnessMatrix()
 {
 	/**
  	* Расчет матрицы жесткости системы
@@ -87,7 +87,7 @@ void Solver::calculateGlobalStiffnessMatrix()
 	stiffnessMatrixBeforeBoundaryConditions = stiffnessMatrix;
 }
 
-void Solver::solve()
+void BeamSolver::solve()
 {
 	/**
  	* Запускает решение задачи
@@ -99,7 +99,7 @@ void Solver::solve()
 	displacements = solver.solve(loads);
 }
 
-void Solver::initializeFromFile(const std::string &path)
+void BeamSolver::initializeFromFile(const std::string &path)
 {
 	/**
  	* Инициализирует параметры решателя по исходному файлу
@@ -170,7 +170,7 @@ void Solver::initializeFromFile(const std::string &path)
 	file.close();
 }
 
-void Solver::saveToFile(const std::string &path) const
+void BeamSolver::saveToFile(const std::string &path) const
 {
 	/**
  	* Сохраняет результаты расчета в выбранный файл
@@ -226,7 +226,7 @@ void Solver::saveToFile(const std::string &path) const
 	file.close();
 }
 
-void Solver::showDisplacements() const
+void BeamSolver::showDisplacements() const
 {
 	/**
  	* Отрисовывает перемещения
@@ -235,7 +235,7 @@ void Solver::showDisplacements() const
 	std::cout << displacements << std::endl;
 }
 
-void Solver::showLocalStiffnessMatrix() const
+void BeamSolver::showLocalStiffnessMatrix() const
 {
 	/**
  	* Отрисовывает локальную матрицу жесткости каждого элемента
@@ -247,7 +247,7 @@ void Solver::showLocalStiffnessMatrix() const
 	}
 }
 
-void Solver::showRotateMatrix() const
+void BeamSolver::showRotateMatrix() const
 {
 	/**
  	* Отрисовывает матрицу перехода в глобальную систему координат
@@ -259,7 +259,7 @@ void Solver::showRotateMatrix() const
 	}
 }
 
-void Solver::showGlobalStiffnessMatrix() const
+void BeamSolver::showGlobalStiffnessMatrix() const
 {
 	/**
  	* Отрисовывает глобальную матрицу жесткости
@@ -271,7 +271,7 @@ void Solver::showGlobalStiffnessMatrix() const
 	}
 }
 
-void Solver::showQuasiDiagonalStiffnessMatrix() const
+void BeamSolver::showQuasiDiagonalStiffnessMatrix() const
 {
 	/**
  	* Отрисовывает квазидиагональную матрицу жесткости системы
@@ -280,7 +280,7 @@ void Solver::showQuasiDiagonalStiffnessMatrix() const
 	std::cout << Eigen::MatrixXd(quasiDiagonalStiffnessMatrix) << std::endl;
 }
 
-void Solver::showCorrespondenceMatrix() const
+void BeamSolver::showCorrespondenceMatrix() const
 {
 	/**
  	* Отрисовывает матрицу соответствия
@@ -289,7 +289,7 @@ void Solver::showCorrespondenceMatrix() const
 	std::cout << Eigen::MatrixXd(correspondenceMatrix) << std::endl;
 }
 
-void Solver::showNodalForces() const
+void BeamSolver::showNodalForces() const
 {
 	/**
  	* Отрисовывает узловые нагрузки
@@ -298,7 +298,7 @@ void Solver::showNodalForces() const
 	std::cout << stiffnessMatrixBeforeBoundaryConditions * displacements << std::endl;
 }
 
-void Solver::resultsReport() const
+void BeamSolver::resultsReport() const
 {
 	/**
  	* Отрисоывает результаты в консоль

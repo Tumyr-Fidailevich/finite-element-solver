@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 3.25)
 
 set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 add_executable(finite-element-solver main.cpp
-        ${INCLUDE_DIR}/io_parser.h io_parser.cpp ${INCLUDE_DIR}/solver.h solver.cpp
-        ${INCLUDE_DIR}/finite_element.h finite_element.cpp
+        ${INCLUDE_DIR}/io_parser.h io_parser.cpp
+        ${INCLUDE_DIR}/solver.h solver.cpp
+        ${INCLUDE_DIR}/beam_element.h beam_element.cpp
+        ${INCLUDE_DIR}/planar_element.h planar_element.cpp
         ${INCLUDE_DIR}/material.h material.cpp
         ${INCLUDE_DIR}/node.h node.cpp
         ${INCLUDE_DIR}/exceptions.h exceptions.cpp)
