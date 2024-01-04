@@ -3,9 +3,9 @@
 
 int main(int argc, char* argv[])
 {
-	BeamSolver solver("D:/finite-element-solver/meshes/mesh8.txt");
+	PlanarSolver solver("D:/finite-element-solver/meshes/planar_mesh.txt");
 	solver.solve();
-	solver.saveToFile("D:/finite-element-solver/results/mesh8_result_1e6.txt");
+	solver.saveToFile("D:/finite-element-solver/results/planar_mesh_result.txt", PlanarSolver::ScaleStatus::On);
 	std::cin.get();
 	return 0;
 }
