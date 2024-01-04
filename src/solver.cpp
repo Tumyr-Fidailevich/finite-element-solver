@@ -332,6 +332,12 @@ PlanarSolver::~PlanarSolver() = default;
 
 void PlanarSolver::saveToFile(const std::string &path, ScaleStatus scale) const
 {
+	/**
+	 * Сохраняет результаты расчетов в файл
+	 *
+	 * @param path путь к файлу с результатами
+	 * @param scale включить/отключить скалирование результатов
+	 */
 	std::ofstream fileStream(path);
 
 	if (!fileStream.is_open())
@@ -345,6 +351,9 @@ void PlanarSolver::saveToFile(const std::string &path, ScaleStatus scale) const
 
 void PlanarSolver::calculateGlobalStiffnessMatrix()
 {
+	/**
+	 * Расчет матрицы жесткости системы
+	 */
 	for (auto &elem: elements)
 	{
 		elem.calculateStiffnessMatrix(nodes, materials);
@@ -491,6 +500,7 @@ void PlanarSolver::resultsReport(std::ostream &stream, ScaleStatus scale) const
  	* Отображает результаты в выбранный поток
  	*
  	* @param stream Поток вывода результатов
+	* @param scale Включить/отключить скалирование результатов
  	*/
 	showDisplacements(stream, scale);
 
@@ -517,6 +527,7 @@ void PlanarSolver::showDisplacements(std::ostream &stream, ScaleStatus scale) co
  	* Отображает перемещения в выбранный поток
  	*
  	* @param stream Поток вывода результатов
+	* @param scale Включить/отключить скалирование результатов
  	*/
  	double scalar = 1;
 	if(scale == ScaleStatus::On) scalar = 1e3;
@@ -560,6 +571,7 @@ void PlanarSolver::showSystemStiffnessMatrix(std::ostream &stream, ScaleStatus s
  	* Отображает матрицу жесткости системы в выбранный поток
  	*
  	* @param stream Поток вывода результатов
+	* @param scale Включить/отключить скалирование результатов
  	*/
  	double scalar = 1;
 	if(scale == ScaleStatus::On) scalar = materials.at(0).youngModulus * elements.at(0).thickness;
@@ -573,6 +585,7 @@ void PlanarSolver::showSystemStiffnessMatrixBeforeApplyingBoundaryConditions(std
  	* Отображает матрицу жесткости системы до применения граничных условий в выбранный поток
  	*
  	* @param stream Поток вывода результатов
+	* @param scale Включить/отключить скалирование результатов
  	*/
 	double scalar = 1;
 	if(scale == ScaleStatus::On) scalar = materials.at(0).youngModulus * elements.at(0).thickness;
@@ -586,6 +599,7 @@ void PlanarSolver::showDeformations(std::ostream &stream, ScaleStatus scale) con
  	* Отображает деформации в выбранный поток
  	*
  	* @param stream Поток вывода результатов
+	* @param scale Включить/отключить скалирование результатов
  	*/
 	stream << "Elements deformations: " << std::endl;
 	for (int i = 0; i < elements.size(); i++)
@@ -630,6 +644,7 @@ void PlanarSolver::showStrains(std::ostream &stream, ScaleStatus scale) const
  	* Отображает напряжений в выбранный поток
  	*
  	* @param stream Поток вывода результатов
+	* @param scale Включить/отключить скалирование результатов
  	*/
 	stream << "Elements strains: " << std::endl;
 	for (int i = 0; i < elements.size(); i++)
@@ -691,6 +706,7 @@ void PlanarSolver::showShapeFunctions(std::ostream &stream, ScaleStatus scale) c
  	* Отображает функции формы в выбранный поток
  	*
  	* @param stream Поток вывода результатов
+	* @param scale Включить/отключить скалирование результатов
  	*/
 	stream << "Elements shape functions: " << std::endl;
 	double scalar = 1;
