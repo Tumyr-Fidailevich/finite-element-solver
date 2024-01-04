@@ -471,7 +471,7 @@ void PlanarSolver::setConstraint()
 				stiffnessMatrix.coeffRef(PlanarElement::DOF * i, j) = 0;
 				stiffnessMatrix.coeffRef(j, PlanarElement::DOF * i) = 0;
 			}
-			stiffnessMatrix.coeffRef(i, i) = 1;
+			stiffnessMatrix.coeffRef(PlanarElement::DOF * i, PlanarElement::DOF * i) = 1;
 		}
 		if (nodes[i].constraint & Node::ConstraintType::Y)
 		{
